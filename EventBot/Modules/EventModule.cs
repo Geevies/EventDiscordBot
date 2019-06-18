@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Linq;
 using EventBot.Entities;
 using Discord.WebSocket;
-using NeoSmart.Unicode;
 using Discord.Addons.Interactive;
 
 namespace EventBot.Modules
