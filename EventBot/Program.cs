@@ -25,7 +25,7 @@ namespace EventBot
                 services.GetRequiredService<CommandService>().Log += LogAsync;
                 services.GetRequiredService<CommandHandlingService>().Log += LogAsync;
 
-                services.GetRequiredService<DatabaseService>();
+                await services.GetRequiredService<DatabaseService>().InitializeAsync();
                 // Tokens should be considered secret data and never hard-coded.
                 // We can read from the environment variable to avoid hardcoding.
 

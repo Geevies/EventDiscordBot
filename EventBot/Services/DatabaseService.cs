@@ -40,14 +40,13 @@ namespace EventBot.Services
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseLazyLoadingProxies();
-#if DEBUG
-            optionsBuilder.UseSqlite("Data Source=blogging.db");
-#else
-            optionsBuilder.UseMySql(Environment.GetEnvironmentVariable("dbconnection"));
-#endif
         }
-            
-            
+
+        public async Task InitializeAsync()
+        {
+            await Database.MigrateAsync();
+        }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
