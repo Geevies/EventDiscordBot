@@ -30,9 +30,9 @@ namespace EventBot.Services
         public async Task TryJoinEvent(IGuildUser user, EventRole er, string extra, bool extraChecks = true)
         {
             if (er.Event.GuildId != user.GuildId)
-                throw new Exception("Cross guild events are fobidden.");
+                throw new Exception("Cross guild events are forbidden.");
             if (extraChecks && er.ReamainingOpenings <= 0)
-                throw new Exception("No openings left.");
+                throw new Exception("No openings are left.");
             if(er.Event.Participants.Where(p => p.UserId == user.Id).Count() > 0)
                 throw new Exception("You are already participating.");
             if(extraChecks && !er.Event.Active)
@@ -95,12 +95,12 @@ namespace EventBot.Services
             if (@event.Type == Event.EventParticipactionType.Quick)
                 embed.Description += "\r\nTo participate in this event react with following emotes:";
             if (@event.Type == Event.EventParticipactionType.Detailed)
-                embed.Description += "\r\nTo participate in this event use command `join <emote or id> <extra information>` as following emotes are awaivable:";
+                embed.Description += "\r\nTo participate in this event use command `join <emote or id> <extra information>` as following emotes are available:";
 
             embed.WithFields(@event.Roles
                 .OrderBy(e => e.SortNumber)
                 .Select(e => new EmbedFieldBuilder()
-                    .WithName($"{e.Emote} `{e.Id}`: *{e.Title}*`{ (e.MaxParticipants > 0 ? $" - {e.ReamainingOpenings} ramaining" : "")} - {e.ParticipantCount} participating.`")
+                    .WithName($"{e.Emote} `{e.Id}`: *{e.Title}*`{ (e.MaxParticipants > 0 ? $" - {e.ReamainingOpenings} remaining" : "")} - {e.ParticipantCount} participating.`")
                     .WithValue($"{e.Description}")
                 ));
             return embed;
@@ -141,7 +141,7 @@ namespace EventBot.Services
                     catch (Exception ex)
                     {
                         if (reaction.User.IsSpecified)
-                            await reaction.User.Value.SendMessageAsync($"Error ocured while processing your reaction: \r\n{ex.GetType()}: {ex.Message}");
+                            await reaction.User.Value.SendMessageAsync($"Error occured while processing your reaction: \r\n{ex.GetType()}: {ex.Message}");
                     }
                 }
             }

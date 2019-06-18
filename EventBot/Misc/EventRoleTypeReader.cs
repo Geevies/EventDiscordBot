@@ -15,7 +15,7 @@ namespace EventBot.Misc
         {
             var database = services.GetRequiredService<DatabaseService>();
             if (context.Guild == null)
-                return Task.FromResult(TypeReaderResult.FromError(CommandError.UnmetPrecondition, "Event roles are avaivable only inside guild context."));
+                return Task.FromResult(TypeReaderResult.FromError(CommandError.UnmetPrecondition, "Event roles are available only inside guild context."));
             EventRole er = null;
             if (int.TryParse(input, out int id))
                 er = database.EventRoles.FirstOrDefault(r => r.Id == id);
