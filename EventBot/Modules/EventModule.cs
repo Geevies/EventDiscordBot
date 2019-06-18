@@ -26,25 +26,25 @@ namespace EventBot.Modules
         [Command("join")]
         [Summary("Joins latest or specified event with specified event role.")]
         public async Task JoinAsync(
-            [Summary("Role emote or role id to join.")] string emoteOrId,
-            [Summary("Extra information that migth be needed by organizers.")] string extraInformation = null,
-            [Summary("Optional event ID for joining event that is not most recent one.")] Event @event = null)
+            [Summary("Role emote or role ID to join the most recent event.")] string emoteOrId,
+            [Summary("Extra information that might be needed by organizers.")] string extraInformation = null,
+            [Summary("Optional event ID, used to join an event that started before the most recent one.")] Event @event = null)
         {
             EventRole er;
             if (!(Context.User is SocketGuildUser guildUser))
-                throw new Exception("This command must be executed inside guild.");
+                throw new Exception("This command must be executed inside a discord server.");
             if (@event == null)
                 @event = _events.FindEventBy(Context.Guild);
             if (@event == null & !(int.TryParse(emoteOrId, out int roleId)))
-                throw new Exception("Unable to locate any events for this guild.");
+                throw new Exception("Unable to locate any events for this discord server.");
             else if (@event == null)
                 er = _database.EventRoles.FirstOrDefault(r => r.Id == roleId);
             else
                 er = @event.Roles.FirstOrDefault(r => r.Emote == emoteOrId);
             if (er == null)
-                throw new ArgumentException("Invalid emote or event id specified");
+                throw new ArgumentException("Invalid emote or event ID specified.");
             if (@event.MessageId == 0)
-                throw new Exception("You can't join not opened event.");
+                throw new Exception("You cannot join an event that hasn't been opened!");
 
             await _events.TryJoinEvent(guildUser, er, extraInformation);
             await Context.Message.DeleteAsync(); // Protect somewhat sensitive data.
@@ -70,7 +70,7 @@ namespace EventBot.Modules
             {
                 var guild = _database.GuildConfigs.FirstOrDefault(g => g.GuildId == Context.Guild.Id);
                 if (guild == null)
-                    throw new Exception("This command must be executed inside guild.");
+                    throw new Exception("This command must be executed inside a discord server.");
 
                 guild.EventRoleConfirmationChannelId = channel.Id;
                 var s = _database.SaveChangesAsync();
@@ -79,13 +79,13 @@ namespace EventBot.Modules
             }
 
             [Command("config partrole")]
-            [Summary("Sets role to assign when they selelct role.")]
+            [Summary("Sets discord role to assign when the user selects a role.")]
             public async Task SetParticipationRole(
             [Summary("Role to assign.")] IRole role)
             {
                 var guild = _database.GuildConfigs.FirstOrDefault(g => g.GuildId == Context.Guild.Id);
                 if (guild == null)
-                    throw new Exception("This command must be executed inside guild.");
+                    throw new Exception("This command must be executed inside a discord server.");
 
                 guild.ParticipantRoleId = role.Id;
                 var s = _database.SaveChangesAsync();
@@ -94,7 +94,7 @@ namespace EventBot.Modules
             }
 
             [Command("new")]
-            [Summary("Creates new event.")]
+            [Summary("Creates a new event.")]
             public async Task NewEvent(
             [Summary("Title for the event.")] string title,
             [Summary("Description for the event.")] string description,
@@ -102,7 +102,7 @@ namespace EventBot.Modules
             {
                 var guild = _database.GuildConfigs.FirstOrDefault(g => g.GuildId == Context.Guild.Id);
                 if (guild == null)
-                    throw new Exception("This command must be executed inside guild.");
+                    throw new Exception("This command must be executed inside a discord server.");
                 var @event = new Event()
                 {
                     Title = title,
@@ -113,11 +113,11 @@ namespace EventBot.Modules
 
                 _database.Add(@event);
                 await _database.SaveChangesAsync();
-                await ReplyAsync($"Created new {@event.Type} event `{title}`, with description of `{description}`. It's ID is `{@event.Id}`.");
+                await ReplyAsync($"Created new {@event.Type} event `{title}`, with description: `{description}`. Its ID is `{@event.Id}`.");
             }
 
             [Command("update title")]
-            [Summary("Updates event title.")]
+            [Summary("Updates the event's title.")]
             public async Task UpdateEventTitle(
             [Summary("Title for the event.")] string title,
             [Summary("Event to update, if not specified, updates latest event.")] Event @event = null)
@@ -125,16 +125,16 @@ namespace EventBot.Modules
                 if (@event == null)
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
-                    throw new Exception("Unable to locate any events for this guild.");
+                    throw new Exception("Unable to locate any events for this discord server.");
                 if (!@event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
                 @event.Title = title;
                 await _database.SaveChangesAsync();
-                await ReplyAsync($"Updated event(`{@event.Id}`) title to `{@event.Title}`");
+                await ReplyAsync($"Updated event (`{@event.Id}`)'s title to `{@event.Title}`");
                 await _events.UpdateEventMessage(@event);
             }
             [Command("update description")]
-            [Summary("Updates event description.")]
+            [Summary("Updates the event's description.")]
             public async Task UpdateEventDescription(
             [Summary("Description for the event.")] string description,
             [Summary("Event to update, if not specified, updates latest event.")] Event @event = null)
@@ -142,17 +142,17 @@ namespace EventBot.Modules
                 if (@event == null)
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
-                    throw new Exception("Unable to locate any events for this guild.");
+                    throw new Exception("Unable to locate any events for this discord server.");
                 if (!@event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
                 @event.Description = description;
                 await _database.SaveChangesAsync();
-                await ReplyAsync($"Updated event(`{@event.Id}`) description to `{@event.Description}`");
+                await ReplyAsync($"Updated event (`{@event.Id}`)'s description to `{@event.Description}`");
                 await _events.UpdateEventMessage(@event);
             }
 
             [Command("update type")]
-            [Summary("Updates event type.")]
+            [Summary("Updates the event type.")]
             public async Task UpdateEventType(
             [Summary("Type of event registration.")] Event.EventParticipactionType type,
             [Summary("Event to update, if not specified, updates latest event.")] Event @event = null)
@@ -162,11 +162,11 @@ namespace EventBot.Modules
                 if (@event == null)
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
-                    throw new Exception("Unable to locate any events for this guild.");
+                    throw new Exception("Unable to locate any events for this discord server.");
                 if (!@event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
                 if (@event.MessageId != 0 && @event.Type != type)
-                    throw new Exception("Can't change event registration type when it's open for registration. Maube you meant to set type to `Unspecified` (-1)");
+                    throw new Exception("Can't change event registration type when it's open for registration. Maybe you meant to set type to `Unspecified` (-1)");
                 if(@event.Type != type)
                     @event.Type = type;                
                 await _database.SaveChangesAsync();
@@ -175,24 +175,24 @@ namespace EventBot.Modules
 
 
             [Command("role new")]
-            [Summary("Adds new role to the event.")]
+            [Summary("Adds a new role to the event.")]
             public async Task NewEventRole(
-            [Summary("Title for the role.")] string title,
-            [Summary("Description for the role.")] string description,
+            [Summary("Title of the role.")] string title,
+            [Summary("Description of the role.")] string description,
             [Summary("Emote for the role.")] string emote,
             [Summary("Max openings, if number is negative, opening count is unlimited.")] int maxOpenings = -1,
-            [Summary("Event to that role is meant for.")] Event @event = null)
+            [Summary("Which event to assign the role to.")] Event @event = null)
             {
                 if (@event == null)
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
-                    throw new Exception("Unable to locate any events for this guild.");
+                    throw new Exception("Unable to locate any events for this discord server.");
                 if (!@event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
                 if (@event.Roles != null && @event.Roles.Count >= 20)
                     throw new Exception("There are too many roles for this event.");
                 if(@event.MessageId != 0)
-                    throw new Exception("Can't add new roles to event with open reigstration.");
+                    throw new Exception("Can't add new roles to event with open registration.");
                 if (!EmoteHelper.TryParse(emote, out IEmote parsedEmote))
                     throw new ArgumentException("Invalid emote provided.");
                 if(@event.Roles != null && @event.Roles.Count(r => r.Emote == parsedEmote.ToString()) > 0)
@@ -207,71 +207,71 @@ namespace EventBot.Modules
                 };
                 _database.Add(er);
                 await _database.SaveChangesAsync();
-                await ReplyAsync($"Added event role `{er.Id}` for event `{er.Event.Id}`, title: `{er.Title}`, description: `{er.Description}`, maxPart: `{er.MaxParticipants}`, emote: {er.Emote}");
+                await ReplyAsync($"Added event role `{er.Id}` for event `{er.Event.Id}`, title: `{er.Title}`, description: `{er.Description}`, maxParticipants: `{er.MaxParticipants}`, emote: {er.Emote}");
             }
 
             [Command("role update title")]
-            [Summary("Updates role's title")]
+            [Summary("Updates the role's title")]
             public async Task UpdateEventRoleTitle(
-            [Summary("Role witch to update.")] EventRole eventRole,
-            [Summary("New title for role.")][Remainder] string title)
+            [Summary("Which role to update.")] EventRole eventRole,
+            [Summary("The new title for the role.")][Remainder] string title)
             {
                 if(eventRole == null)
-                    throw new Exception("Please provide correct role.");
+                    throw new Exception("Please provide the correct role info, this one does not exist.");
                 if (!eventRole.Event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
                 eventRole.Title = title;
                 var s = _database.SaveChangesAsync();
-                await ReplyAsync($"Updated event role `{eventRole.Id}` title to `{eventRole.Title}`");
+                await ReplyAsync($"Updated event role `{eventRole.Id}`'s title to `{eventRole.Title}`");
                 await s;
                 await _events.UpdateEventMessage(eventRole.Event);
             }
 
             [Command("role update desc")]
-            [Summary("Updates role's description.")]
+            [Summary("Updates the role's description.")]
             public async Task UpdateEventRoleDescription(
-            [Summary("Role witch to update.")] EventRole eventRole,
-            [Summary("New description for role.")][Remainder] string description)
+            [Summary("Which role to update.")] EventRole eventRole,
+            [Summary("New description for the role.")][Remainder] string description)
             {
                 if (eventRole == null)
-                    throw new Exception("Please provide correct role.");
+                    throw new Exception("Please provide the correct role info, this one does not exist.");
                 if (!eventRole.Event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
                 eventRole.Description = description;
                 var s = _database.SaveChangesAsync();
-                await ReplyAsync($"Updated event role `{eventRole.Id}` description to `{eventRole.Description}`");
+                await ReplyAsync($"Updated event role `{eventRole.Id}`'s description to `{eventRole.Description}`");
                 await s;
                 await _events.UpdateEventMessage(eventRole.Event);
             }
 
             [Command("role update slots")]
-            [Summary("Updates role's maximum participants count.")]
+            [Summary("Updates a role's maximum participants count.")]
             public async Task UpdateEventRoleMaxParticipants(
-            [Summary("Role witch to update.")] EventRole eventRole,
+            [Summary("Which role to update.")] EventRole eventRole,
             [Summary("New maximum participant count for role.")] int maxParticipants)
             {
                 if (eventRole == null)
-                    throw new Exception("Please provide correct role.");
+                    throw new Exception("Please provide the correct role info, this one does not exist.");
                 if (!eventRole.Event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
                 eventRole.MaxParticipants = maxParticipants;
                 var s = _database.SaveChangesAsync();
-                await ReplyAsync($"Updated event role `{eventRole.Id}` maximum participant count to `{eventRole.MaxParticipants}`");
+                await ReplyAsync($"Updated event role `{eventRole.Id}`'s maximum participant count to `{eventRole.MaxParticipants}`");
                 await s;
                 await _events.UpdateEventMessage(eventRole.Event);
             }
 
 
             [Command("role update emote")]
-            [Summary("Updates role's emote.")]
+            [Summary("Updates a role's emote.")]
             public async Task UpdateEventRoleEmote(
-            [Summary("Role witch to update.")] EventRole eventRole,
+            [Summary("Which role to update.")] EventRole eventRole,
             [Summary("New emote for the role.")] string emote)
             {
                 if (eventRole == null)
-                    throw new Exception("Please provide correct role.");
+                    throw new Exception("Please provide the correct role info, this one does not exist.");
                 if (eventRole.Event.MessageId != 0)
-                    throw new Exception("Role emote can't be edited while event is open for registrasion.");
+                    throw new Exception("A role's emote cannot be edited while the event is open for registration.");
                 if (!eventRole.Event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
                 if (!EmoteHelper.TryParse(emote, out IEmote parsedEmote))
@@ -288,17 +288,17 @@ namespace EventBot.Modules
             [Command()]
             [Summary("Get info about event.")]
             public async Task EventInfo(
-            [Summary("Event about witch info is wanted.")] Event @event = null)
+            [Summary("Event  ID of event you wish to know more of.")] Event @event = null)
             {
                 if (@event == null)
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
-                    throw new Exception("No events were found for this guild.");
+                    throw new Exception("No events were found for this discord server.");
                 var embed = new EmbedBuilder()
                     .WithTitle(@event.Title)
                     .WithDescription(@event.Description)
                     .WithTimestamp(@event.Opened)
-                    .WithFooter($"EventId: {@event.Id}; MessageId: {@event.MessageId}; MessageChannelId: {@event.MessageChannelId}")
+                    .WithFooter($"EventId: {@event.Id}; MessageID: {@event.MessageId}; MessageChannelID: {@event.MessageChannelId}")
                     .AddField("Active", @event.Active ? "Yes" : "No", true)
                     .AddField("Type", @event.Type, true)
                     .AddField("Participants", @event.ParticipantCount, true);
@@ -316,12 +316,12 @@ namespace EventBot.Modules
             }
             [Priority(1)]
             [Command("role")]
-            [Summary("Gets role info.")]
+            [Summary("Gets info about a role.")]
             public async Task EventRoleInfo(
-            [Summary("Role about witch info is wanted.")] EventRole eventRole)
+            [Summary("Role you wish to have more info about.")] EventRole eventRole)
             {
                 if (eventRole == null)
-                    throw new Exception("Please provide correct role.");
+                    throw new Exception("Please provide the correct role info, this one does not exist.");
                 var embed = new EmbedBuilder()
                     .WithTitle($"{eventRole.Emote} {eventRole.Title}")
                     .WithDescription($"{eventRole.Description}")
@@ -339,14 +339,14 @@ namespace EventBot.Modules
             }
 
             [Command("open")]
-            [Summary("Open registration for event here.")]
+            [Summary("Open registration for event here. Warning: Ensure everything is correct before doing this.")]
             public async Task EventOpen(
             [Summary("Event to open")] Event @event = null)
             {
                 if (@event == null)
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
-                    throw new Exception("No events were found for this guild.");
+                    throw new Exception("No events were found for this discord server.");
                 if (!@event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
 
@@ -378,7 +378,7 @@ namespace EventBot.Modules
                 if (@event == null)
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
-                    throw new Exception("No events were found for this guild.");
+                    throw new Exception("No events were found for this discord server.");
                 if (!@event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
                 if (@event.MessageId == 0)
@@ -387,7 +387,7 @@ namespace EventBot.Modules
                 @event.MessageId = 0;
                 @event.MessageChannelId = 0;
                 await _database.SaveChangesAsync();
-                await ReplyAsync($"Event `{@event.Id}` registration has been closed, it's registration message will now be normal message.");
+                await ReplyAsync($"Event `{@event.Id}`'s registration has been closed, its registration message will now be normal message.");
             }
 
             [Command("finalize")]
@@ -398,14 +398,14 @@ namespace EventBot.Modules
                 if (@event == null)
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
-                    throw new Exception("No events were found for this guild.");
+                    throw new Exception("No events were found for this discord server.");
                 if (!@event.Active)
                     throw new Exception("This event is already finalized.");
 
                 @event.Active = false;
                 await _database.SaveChangesAsync();
                 
-                await ReplyAsync($"Event `{@event.Id}` has been finilized. Removing participant roles...");
+                await ReplyAsync($"Event `{@event.Id}`'s has been finalized. Removing participant roles..");
                 if (@event.Guild.ParticipantRoleId != 0)
                     foreach (var participant in @event.Participants)
                     {
@@ -421,7 +421,7 @@ namespace EventBot.Modules
             {
                 var guildEvents = _database.Events.Where(e => e.GuildId == Context.Guild.Id).OrderBy(e => e.Opened).ToList();
                 if (guildEvents.Count() == 0)
-                    throw new Exception("There are no events that roon on this server.");
+                    throw new Exception("No events have been run on this server.");
 
                 var pagedEvents = guildEvents
                     .Select((e, i) => new { Event = e, Index = i })
@@ -429,7 +429,7 @@ namespace EventBot.Modules
                     .Select(g => g.Select(o => o.Event));
                 var pager = new PaginatedMessage()
                 {
-                    Title = "List al all prevous events.",
+                    Title = "Lists all previous events.",
                     Color = Color.Blue,
                     Options = new PaginatedAppearanceOptions()
                     {
@@ -450,24 +450,24 @@ namespace EventBot.Modules
             [Command("participant add")]
             [Summary("Add user to event role. Acts like join command.")]
             public async Task EventParticipantAdd(
-            [Summary("User id or mention")] IUser user,
-            [Summary("Role emote or role id to join.")] string emoteOrId,
-            [Summary("Extra information that migth be needed by organizers.")] string extraInformation = null,
-            [Summary("Optional event ID for joining event that is not most recent one.")] Event @event = null)
+            [Summary("User ID or discord mention.")] IUser user,
+            [Summary("Role emote or role ID to join.")] string emoteOrId,
+            [Summary("Extra information that might be needed by organizers.")] string extraInformation = null,
+            [Summary("Optional event ID for joining event that is not the most recent one.")] Event @event = null)
             {
                 EventRole er;
                 if (!(user is SocketGuildUser guildUser))
-                    throw new Exception("This command must be executed inside guild.");
+                    throw new Exception("This command must be executed inside a discord server.");
                 if (@event == null)
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null & !(int.TryParse(emoteOrId, out int roleId)))
-                    throw new Exception("Unable to locate any events for this guild.");
+                    throw new Exception("Unable to locate any events for this discord server.");
                 else if (@event == null || roleId != 0)
                     er = _database.EventRoles.FirstOrDefault(r => r.Id == roleId);
                 else
                     er = @event.Roles.FirstOrDefault(r => r.Emote == emoteOrId);
                 if (er == null)
-                    throw new ArgumentException("Invalid emote or event id specified");
+                    throw new ArgumentException("Invalid emote or event ID specified");
                 if (!er.Event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
 
@@ -478,24 +478,24 @@ namespace EventBot.Modules
             [Command("participant remove")]
             [Summary("Remove participant from event role.")]
             public async Task EventParticipantRemove(
-            [Summary("User that is participanting id or mention")] IUser user,
-            [Summary("Event to romove participant from")] Event @event = null)
+            [Summary("User that is participanting's ID or discord mention.")] IUser user,
+            [Summary("Event to remove the participant from.")] Event @event = null)
             {
                 if (@event == null)
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
-                    throw new Exception("No events were found for this guild.");
+                    throw new Exception("No events were found for this discord server.");
                 if (!@event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
 
                 if (!(user is IGuildUser guildUser))
-                    throw new Exception("This command must be executed inside guild.");
+                    throw new Exception("This command must be executed inside a discord server.");
 
                 var participant = @event.Participants.FirstOrDefault(p => p.UserId == guildUser.Id);
                 _database.Remove(participant);
                 var embed = new EmbedBuilder()
-                    .WithTitle($"{user} been removed from event `{@event.Title}`, by {Context.User}")
-                    .WithDescription($"They were in `{participant.Role.Title}` role")
+                    .WithTitle($"{user} been removed from event `{@event.Title}`, by {Context.User}.")
+                    .WithDescription($"Their role was: `{participant.Role.Title}`")
                     .WithColor(Color.Red);
                 if (participant.UserData != null)
                     embed.AddField("Provided details", $"`{participant.UserData}`");
