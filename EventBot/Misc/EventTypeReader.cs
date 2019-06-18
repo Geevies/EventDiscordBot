@@ -18,9 +18,9 @@ namespace EventBot.Misc
                 return Task.FromResult(TypeReaderResult.FromError(CommandError.UnmetPrecondition, "Events are avaivable only inside guild context."));
             Event ev;
             if (input == null)
-                ev = events.FindEventBy(context.Guild);
+                ev = events.FindEventBy(context.Guild, true);
             else if (int.TryParse(input, out int id))
-                ev = events.FindEventBy(context.Guild, id);
+                ev = events.FindEventBy(context.Guild, id, true);
             else
                 return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Event id is not a number."));
 

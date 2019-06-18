@@ -9,6 +9,8 @@ namespace EventBot.Services
     {
         public MySqlDatabaseService(IServiceProvider services, DbContextOptions options) : base(services, options) { }
         public MySqlDatabaseService(IServiceProvider services) : base(services) { }
+        public MySqlDatabaseService() : base() { }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);

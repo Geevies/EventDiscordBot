@@ -9,6 +9,7 @@ namespace EventBot.Services
     {
         public SqliteDatabaseService(IServiceProvider services, DbContextOptions options) : base(services, options) { }
         public SqliteDatabaseService(IServiceProvider services) : base(services) {}
+        public SqliteDatabaseService() : base() { }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

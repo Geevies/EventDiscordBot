@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace EventBot.Services
 {
-    public abstract class DatabaseService: DbContext
+    public abstract class DatabaseService : DbContext
     {
         private readonly IServiceProvider _services;
         private readonly DiscordSocketClient _discord;
@@ -36,6 +36,7 @@ namespace EventBot.Services
             _discord = services.GetRequiredService<DiscordSocketClient>();
             _discord.GuildAvailable += OnGuildAvaivable;
         }
+        public DatabaseService(): base() {}
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

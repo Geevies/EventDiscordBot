@@ -9,6 +9,7 @@ using System.Linq;
 using EventBot.Entities;
 using Discord.WebSocket;
 using NeoSmart.Unicode;
+using Discord.Addons.Interactive;
 
 namespace EventBot.Modules
 {
@@ -53,16 +54,14 @@ namespace EventBot.Modules
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
         [Group("event")]
-        public class EventManagementModule : ModuleBase<SocketCommandContext>
+        public class EventManagementModule : InteractiveBase<SocketCommandContext>
         {
             private readonly EventManagementService _events;
             private readonly DatabaseService _database;
-            private readonly EmoteService _emotes;
-            public EventManagementModule(EventManagementService events, DatabaseService database, EmoteService emotes)
+            public EventManagementModule(EventManagementService events, DatabaseService database)
             {
                 _events = events;
                 _database = database;
-                _emotes = emotes;
             }
 
             [Command("config logchannel")]
@@ -128,6 +127,8 @@ namespace EventBot.Modules
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
                     throw new Exception("Unable to locate any events for this guild.");
+                if (!@event.Active)
+                    throw new Exception("This event is finalized. Please make a new event.");
                 @event.Title = title;
                 await _database.SaveChangesAsync();
                 await ReplyAsync($"Updated event(`{@event.Id}`) title to `{@event.Title}`");
@@ -143,6 +144,8 @@ namespace EventBot.Modules
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
                     throw new Exception("Unable to locate any events for this guild.");
+                if (!@event.Active)
+                    throw new Exception("This event is finalized. Please make a new event.");
                 @event.Description = description;
                 await _database.SaveChangesAsync();
                 await ReplyAsync($"Updated event(`{@event.Id}`) description to `{@event.Description}`");
@@ -161,6 +164,8 @@ namespace EventBot.Modules
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
                     throw new Exception("Unable to locate any events for this guild.");
+                if (!@event.Active)
+                    throw new Exception("This event is finalized. Please make a new event.");
                 if (@event.MessageId != 0 && @event.Type != type)
                     throw new Exception("Can't change event registration type when it's open for registration. Maube you meant to set type to `Unspecified` (-1)");
                 if(@event.Type != type)
@@ -183,11 +188,13 @@ namespace EventBot.Modules
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
                     throw new Exception("Unable to locate any events for this guild.");
-                if(@event.Roles != null && @event.Roles.Count >= 20)
+                if (!@event.Active)
+                    throw new Exception("This event is finalized. Please make a new event.");
+                if (@event.Roles != null && @event.Roles.Count >= 20)
                     throw new Exception("There are too many roles for this event.");
                 if(@event.MessageId != 0)
                     throw new Exception("Can't add new roles to event with open reigstration.");
-                if (!_emotes.TryParse(emote, out IEmote parsedEmote))
+                if (!EmoteHelper.TryParse(emote, out IEmote parsedEmote))
                     throw new ArgumentException("Invalid emote provided.");
                 if(@event.Roles != null && @event.Roles.Count(r => r.Emote == parsedEmote.ToString()) > 0)
                     throw new ArgumentException("This emote is already used by other role.");
@@ -212,6 +219,8 @@ namespace EventBot.Modules
             {
                 if(eventRole == null)
                     throw new Exception("Please provide correct role.");
+                if (!eventRole.Event.Active)
+                    throw new Exception("This event is finalized. Please make a new event.");
                 eventRole.Title = title;
                 var s = _database.SaveChangesAsync();
                 await ReplyAsync($"Updated event role `{eventRole.Id}` title to `{eventRole.Title}`");
@@ -227,6 +236,8 @@ namespace EventBot.Modules
             {
                 if (eventRole == null)
                     throw new Exception("Please provide correct role.");
+                if (!eventRole.Event.Active)
+                    throw new Exception("This event is finalized. Please make a new event.");
                 eventRole.Description = description;
                 var s = _database.SaveChangesAsync();
                 await ReplyAsync($"Updated event role `{eventRole.Id}` description to `{eventRole.Description}`");
@@ -242,6 +253,8 @@ namespace EventBot.Modules
             {
                 if (eventRole == null)
                     throw new Exception("Please provide correct role.");
+                if (!eventRole.Event.Active)
+                    throw new Exception("This event is finalized. Please make a new event.");
                 eventRole.MaxParticipants = maxParticipants;
                 var s = _database.SaveChangesAsync();
                 await ReplyAsync($"Updated event role `{eventRole.Id}` maximum participant count to `{eventRole.MaxParticipants}`");
@@ -258,7 +271,11 @@ namespace EventBot.Modules
             {
                 if (eventRole == null)
                     throw new Exception("Please provide correct role.");
-                if (!_emotes.TryParse(emote, out IEmote parsedEmote))
+                if (eventRole.Event.MessageId != 0)
+                    throw new Exception("Role emote can't be edited while event is open for registrasion.");
+                if (!eventRole.Event.Active)
+                    throw new Exception("This event is finalized. Please make a new event.");
+                if (!EmoteHelper.TryParse(emote, out IEmote parsedEmote))
                     throw new ArgumentException("Invalid emote provided.");
                     
                 if (eventRole.Event.Roles.Count(r => r.Emote == parsedEmote.ToString()) > 0)
@@ -331,6 +348,8 @@ namespace EventBot.Modules
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
                     throw new Exception("No events were found for this guild.");
+                if (!@event.Active)
+                    throw new Exception("This event is finalized. Please make a new event.");
 
                 await Context.Message.DeleteAsync();
                 var message = await ReplyAsync(embed: _events.GenerateEventEmbed(@event).Build());
@@ -343,13 +362,90 @@ namespace EventBot.Modules
                     case Event.EventParticipactionType.Unspecified:
                         throw new Exception("Event type was unspecified.");
                     case Event.EventParticipactionType.Quick:
-                        await message.AddReactionsAsync(@event.Roles.OrderBy(e => e.SortNumber).Select(r => _emotes.Parse(r.Emote)).ToArray());
+                        await message.AddReactionsAsync(@event.Roles.OrderBy(e => e.SortNumber).Select(r => EmoteHelper.Parse(r.Emote)).ToArray());
                         break;
                     case Event.EventParticipactionType.Detailed:
                         break;
                     default:
                         throw new Exception("Event type in not implemented.");
                 }
+            }
+            
+            [Command("close")]
+            [Summary("Closes event registration.")]
+            public async Task EventClose(
+            [Summary("Event to close")] Event @event = null)
+            {
+                if (@event == null)
+                    @event = _events.FindEventBy(Context.Guild);
+                if (@event == null)
+                    throw new Exception("No events were found for this guild.");
+                if (!@event.Active)
+                    throw new Exception("This event is finalized. Please make a new event.");
+                if (@event.MessageId == 0)
+                    throw new Exception("This event is already closed for registration.");
+
+                @event.MessageId = 0;
+                @event.MessageChannelId = 0;
+                await _database.SaveChangesAsync();
+                await ReplyAsync($"Event `{@event.Id}` registration has been closed, it's registration message will now be normal message.");
+            }
+
+            [Command("finalize")]
+            [Summary("Archives event and reverts all role additions. This is irreversable.")]
+            public async Task EventFinilize(
+            [Summary("Event to finilize")] Event @event = null)
+            {
+                if (@event == null)
+                    @event = _events.FindEventBy(Context.Guild);
+                if (@event == null)
+                    throw new Exception("No events were found for this guild.");
+                if (!@event.Active)
+                    throw new Exception("This event is already finalized.");
+
+                @event.Active = false;
+                await _database.SaveChangesAsync();
+                
+                await ReplyAsync($"Event `{@event.Id}` has been finilized. Removing participant roles...");
+                if (@event.Guild.ParticipantRoleId != 0)
+                    foreach (var participant in @event.Participants)
+                    {
+                        var user = Context.Guild.GetUser(participant.UserId);
+                        await user.RemoveRoleAsync(Context.Guild.GetRole(@event.Guild.ParticipantRoleId));
+                    }
+                await ReplyAsync($"Everyone's roles have been removed. I hope it was fun!");
+            }
+
+            [Command("list")]
+            [Summary("Lists all prevous events that took on this server.")]
+            public async Task EventArchive()
+            {
+                var guildEvents = _database.Events.Where(e => e.GuildId == Context.Guild.Id).OrderBy(e => e.Opened).ToList();
+                if (guildEvents.Count() == 0)
+                    throw new Exception("There are no events that roon on this server.");
+
+                var pagedEvents = guildEvents
+                    .Select((e, i) => new { Event = e, Index = i })
+                    .GroupBy(o => o.Index / 6)
+                    .Select(g => g.Select(o => o.Event));
+                var pager = new PaginatedMessage()
+                {
+                    Title = "List al all prevous events.",
+                    Color = Color.Blue,
+                    Options = new PaginatedAppearanceOptions()
+                    {
+                        Timeout = new TimeSpan(0, 3, 0),
+                        DisplayInformationIcon = false,
+                        JumpDisplayOptions = JumpDisplayOptions.Never
+                    }
+                };
+                pager.Pages = pagedEvents.Select(eg =>
+                    string.Join("\r\n", eg.Select(e =>
+                        $"`{e.Id}` **{e.Title}** {(e.Active ? "✅" : "❌")}\r\n" +
+                        $"Opened at {e.Opened.ToShortDateString()} {e.Opened.ToShortTimeString()}"
+                        ))
+                );
+                await PagedReplyAsync(pager);
             }
 
             [Command("participant add")]
@@ -367,12 +463,14 @@ namespace EventBot.Modules
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null & !(int.TryParse(emoteOrId, out int roleId)))
                     throw new Exception("Unable to locate any events for this guild.");
-                else if (@event == null)
+                else if (@event == null || roleId != 0)
                     er = _database.EventRoles.FirstOrDefault(r => r.Id == roleId);
                 else
                     er = @event.Roles.FirstOrDefault(r => r.Emote == emoteOrId);
                 if (er == null)
                     throw new ArgumentException("Invalid emote or event id specified");
+                if (!er.Event.Active)
+                    throw new Exception("This event is finalized. Please make a new event.");
 
                 await _events.TryJoinEvent(guildUser, er, extraInformation, false);
                 await Context.Message.DeleteAsync(); // Protect somewhat sensitive data.
@@ -388,6 +486,8 @@ namespace EventBot.Modules
                     @event = _events.FindEventBy(Context.Guild);
                 if (@event == null)
                     throw new Exception("No events were found for this guild.");
+                if (!@event.Active)
+                    throw new Exception("This event is finalized. Please make a new event.");
 
                 if (!(user is IGuildUser guildUser))
                     throw new Exception("This command must be executed inside guild.");

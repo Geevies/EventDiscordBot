@@ -15,14 +15,12 @@ namespace EventBot.Services
     {
         private readonly DiscordSocketClient _discord;
         private readonly DatabaseService _database;
-        private readonly EmoteService _emotes;
         private readonly IServiceProvider _services;
 
         public EventManagementService(IServiceProvider services)
         {
             _discord = services.GetRequiredService<DiscordSocketClient>();
             _database = services.GetRequiredService<DatabaseService>();
-            _emotes = services.GetRequiredService<EmoteService>();
             _services = services;
 
             _discord.ReactionAdded += ReactionAddedAsync;
@@ -128,7 +126,7 @@ namespace EventBot.Services
             var @event = _database.Events.FirstOrDefault(e => e.MessageId == message.Id);
             if (@event != null)
             {
-                var role = @event.Roles.FirstOrDefault(r => reaction.Emote.Equals(_emotes.Parse(r.Emote)));
+                var role = @event.Roles.FirstOrDefault(r => reaction.Emote.Equals(EmoteHelper.Parse(r.Emote)));
                 if(role != null)
                 {
                     var userMessage = await message.GetOrDownloadAsync();

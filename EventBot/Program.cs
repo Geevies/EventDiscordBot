@@ -63,7 +63,6 @@ namespace EventBot
                     return new SqliteDatabaseService(sp);
                 })
                 .AddSingleton<InteractiveService>()
-                .AddSingleton<EmoteService>()
                 //.AddSingleton<HttpClient>()
                 //.AddSingleton<PictureService>()
                 .BuildServiceProvider();
