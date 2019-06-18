@@ -1,6 +1,0 @@
-
-`set dbconnection="Server=localhost;Database=eventbot;User=root;Password=password;"`
-
-
-`Add-Migration InitialDatabase -Context MySqlDatabaseService -OutputDir Migrations\MySql`
-`Add-Migration InitialDatabase -Context SqliteDatabaseService -OutputDir Migrations\Sqlite`
