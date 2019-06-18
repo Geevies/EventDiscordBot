@@ -3,8 +3,12 @@
     "EventBot": {
       "commandName": "Project",
       "environmentVariables": {
+        "dbconnection": "Server=localhost;Database=eventbot;User=root;Password=tux;",
         "token": "<insert Token here>"
       }
+    },
+    "Docker": {
+      "commandName": "Docker"
     }
   }
 }
