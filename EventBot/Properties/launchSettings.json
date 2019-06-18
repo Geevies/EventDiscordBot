@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "EventBot": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "token": "<insert Token here>"
+      }
+    }
+  }
+}
