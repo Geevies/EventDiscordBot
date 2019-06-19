@@ -478,7 +478,7 @@ namespace EventBot.Modules
             [Command("participant remove")]
             [Summary("Remove participant from event role.")]
             public async Task EventParticipantRemove(
-            [Summary("User that is participanting's ID or discord mention.")] IUser user,
+            [Summary("User that is participating's ID or discord mention.")] IUser user,
             [Summary("Event to remove the participant from.")] Event @event = null)
             {
                 if (@event == null)
