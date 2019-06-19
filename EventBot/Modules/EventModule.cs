@@ -405,7 +405,7 @@ namespace EventBot.Modules
                 @event.Active = false;
                 await _database.SaveChangesAsync();
                 
-                await ReplyAsync($"Event `{@event.Id}`'s has been finalized. Removing participant roles..");
+                await ReplyAsync($"Event `{@event.Id}` has been finalized. Removing participant roles..");
                 if (@event.Guild.ParticipantRoleId != 0)
                     foreach (var participant in @event.Participants)
                     {
