@@ -15,14 +15,14 @@ namespace EventBot.Misc
         {
             var events = services.GetRequiredService<EventManagementService>();
             if (context.Guild == null)
-                return Task.FromResult(TypeReaderResult.FromError(CommandError.UnmetPrecondition, "Events are available only inside guild context."));
+                return Task.FromResult(TypeReaderResult.FromError(CommandError.UnmetPrecondition, "Events are available only inside a discord server."));
             Event ev;
             if (input == null)
                 ev = events.FindEventBy(context.Guild, true);
             else if (int.TryParse(input, out int id))
                 ev = events.FindEventBy(context.Guild, id, true);
             else
-                return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Event id is not a number."));
+                return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Event ID is not a number."));
 
             return Task.FromResult(TypeReaderResult.FromSuccess(ev));
         }

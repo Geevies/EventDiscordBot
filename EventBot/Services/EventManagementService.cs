@@ -30,7 +30,7 @@ namespace EventBot.Services
         public async Task TryJoinEvent(IGuildUser user, EventRole er, string extra, bool extraChecks = true)
         {
             if (er.Event.GuildId != user.GuildId)
-                throw new Exception("Cross guild events are forbidden.");
+                throw new Exception("Cross server events are forbidden.");
             if (extraChecks && er.ReamainingOpenings <= 0)
                 throw new Exception("No openings are left.");
             if(er.Event.Participants.Where(p => p.UserId == user.Id).Count() > 0)
