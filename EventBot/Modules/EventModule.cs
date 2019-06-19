@@ -387,7 +387,7 @@ namespace EventBot.Modules
                 @event.MessageId = 0;
                 @event.MessageChannelId = 0;
                 await _database.SaveChangesAsync();
-                await ReplyAsync($"Event `{@event.Id}`'s registration has been closed, its registration message will now be normal message.");
+                await ReplyAsync($"Event's `{@event.Id}` registration has been closed, its registration message will now be normal message.");
             }
 
             [Command("finalize")]
