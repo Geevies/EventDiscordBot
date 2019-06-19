@@ -339,7 +339,7 @@ namespace EventBot.Modules
             }
 
             [Command("open")]
-            [Summary("Open registration for event here. Warning: Ensure everything is correct before doing this.")]
+            [Summary("Open registration for event here.")]
             public async Task EventOpen(
             [Summary("Event to open")] Event @event = null)
             {
