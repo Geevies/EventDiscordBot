@@ -421,7 +421,7 @@ namespace EventBot.Modules
             {
                 var guildEvents = _database.Events.Where(e => e.GuildId == Context.Guild.Id).OrderBy(e => e.Opened).ToList();
                 if (guildEvents.Count() == 0)
-                    throw new Exception("No events have been run on this server.");
+                    throw new Exception("There are no events that have been run on this server.");
 
                 var pagedEvents = guildEvents
                     .Select((e, i) => new { Event = e, Index = i })
