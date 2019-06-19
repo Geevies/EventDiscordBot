@@ -239,7 +239,7 @@ namespace EventBot.Modules
                     throw new Exception("This event is finalized. Please make a new event.");
                 eventRole.Description = description;
                 var s = _database.SaveChangesAsync();
-                await ReplyAsync($"Updated event role `{eventRole.Id}`'s description to `{eventRole.Description}`");
+                await ReplyAsync($"Updated event role's `{eventRole.Id}` description to `{eventRole.Description}`");
                 await s;
                 await _events.UpdateEventMessage(eventRole.Event);
             }
