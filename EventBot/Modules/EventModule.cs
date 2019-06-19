@@ -130,7 +130,7 @@ namespace EventBot.Modules
                     throw new Exception("This event is finalized. Please make a new event.");
                 @event.Title = title;
                 await _database.SaveChangesAsync();
-                await ReplyAsync($"Updated event (`{@event.Id}`)'s title to `{@event.Title}`");
+                await ReplyAsync($"Updated event's (`{@event.Id}`) title to `{@event.Title}`");
                 await _events.UpdateEventMessage(@event);
             }
             [Command("update description")]
