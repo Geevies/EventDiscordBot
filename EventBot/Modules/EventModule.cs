@@ -207,7 +207,7 @@ namespace EventBot.Modules
                 };
                 _database.Add(er);
                 await _database.SaveChangesAsync();
-                await ReplyAsync($"Added event role `{er.Id}` for event `{er.Event.Id}`, title: `{er.Title}`, description: `{er.Description}`, maxParticipants: `{er.MaxParticipants}`, emote: {er.Emote}");
+                await ReplyAsync($"Added event role `{er.Id}` for event `{er.Event.Id}`, title: `{er.Title}`, description: `{er.Description}`, slots: `{er.MaxParticipants}`, emote: {er.Emote}");
             }
 
             [Command("role update title")]
