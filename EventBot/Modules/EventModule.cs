@@ -234,7 +234,7 @@ namespace EventBot.Modules
             [Summary("New description for the role.")][Remainder] string description)
             {
                 if (eventRole == null)
-                    throw new Exception("Please provide the correct role info, this one does not exist.");
+                    throw new Exception("Please provide the correct role ID, this one does not exist.");
                 if (!eventRole.Event.Active)
                     throw new Exception("This event is finalized. Please make a new event.");
                 eventRole.Description = description;
