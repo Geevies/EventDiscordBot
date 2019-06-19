@@ -147,7 +147,7 @@ namespace EventBot.Modules
                     throw new Exception("This event is finalized. Please make a new event.");
                 @event.Description = description;
                 await _database.SaveChangesAsync();
-                await ReplyAsync($"Updated event (`{@event.Id}`)'s description to `{@event.Description}`");
+                await ReplyAsync($"Updated event's (`{@event.Id}`) description to `{@event.Description}`");
                 await _events.UpdateEventMessage(@event);
             }
 
