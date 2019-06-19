@@ -20,7 +20,7 @@ namespace EventBot.Misc
             if (int.TryParse(input, out int id))
                 er = database.EventRoles.FirstOrDefault(r => r.Id == id);
             else
-                return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Event role IS is not a valid number."));
+                return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Event role ID is not a valid number."));
             if(er == null)
                 return Task.FromResult(TypeReaderResult.FromError(CommandError.ObjectNotFound, "Specified event role was not found."));
             if(er.Event?.GuildId != context.Guild.Id)
